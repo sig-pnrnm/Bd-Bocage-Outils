@@ -1,0 +1,317 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <meta name="description" content="Observatoire du Bocage du Parc Normandie-Maine" />
+    <meta name="author" content="SMo - PNR Normandie-Maine" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Observatoire du Bocage</title>
+    <link rel="stylesheet" href="leaflet/leaflet.css" />
+    <link rel="stylesheet" href="addok/Control.Geocoder.css" />
+    <script src="leaflet/leaflet-src.js"></script>
+    <script src="addok/Control.Geocoder.js"></script>
+    <script src="addok/Control.Geocoder.AddOk.js"></script>
+    <script src="data/pnrnm_mask.js"></script>
+   
+    <style type="text/css">
+        html, body { width: 100%; height: 100%; margin: 0px; background-color: black;}
+        #header { width: 100%; height: 100px; position: absolute; top: 0px; color: white; background-image: url(img/header_bocage_100px.jpg); border-radius: 10px;}
+        #header_obs { position:absolute; top:0px; left:5px; width: 142px; top:5px; height: 90px; z-index: 9; background-image: url(img/observatoire.png); }
+        #header_txt { position:absolute; top:20px; left:150px; right: 100px; bottom:20px; z-index: 10; padding:10px; font-family: Arial, Helvetica, "Liberation Sans", FreeSans, sans-serif;}
+        #header_txt_bg { background-color: #000000; position:absolute; z-index:-1; border-radius: 10px; top:0px; left:0px; right:0px; bottom:0px; opacity:0.3; }
+        #header_pnrnm { position:absolute; top:0px; right:0px; width: 78px; bottom:0px; z-index: 9; background-image: url(img/blocmarque_ombre.png); }
+        #maps { position: absolute; top: 100px; bottom: 0px; left: 0px; right: 0px; margin: 0px; }
+        #map1cadre, #map2cadre { position:relative; width: 50%; height: 100%; margin: 0px; padding: 0px; }
+        #map1cadre { float: left; }
+        #map2cadre { float: right; }
+        #map1, #map2 { position:absolute; top:2px; bottom: 2px; border-radius: 10px; -moz-box-shadow: inset 0 0 10px #000000; -webkit-box-shadow: inset 0 0 10px #000000; box-shadow: inset 0 0 10px #000000;}
+        #map1 { left: 2px; right: 1px; }
+        #map2 { left: 1px; right: 2px; }
+        .noCursor { cursor:none; }
+    </style>
+
+</head>
+
+<body>
+    <div id="header">
+      <div id="header_obs" onclick="window.location='http://www.parc-naturel-normandie-maine.fr/agir/observatoire.html'"></div>
+      <div id="header_txt">
+         <b>Observatoire du Bocage du PNR Normandie-Maine</b><br>
+         Evolution du lin&eacute;aire de haies depuis les ann&eacute;es 50
+         <div id="header_txt_bg"></div>
+      </div>
+      <div id="header_pnrnm" onclick="window.location='http://www.parc-naturel-normandie-maine.fr'"></div>
+    </div>
+    <div id="maps">
+    <div id="map1cadre"><div id="map1"></div></div>
+    <div id="map2cadre"><div id="map2"></div></div>
+    </div>
+    <script src="js/L.Map.Sync.js"></script>
+
+    <script type="text/javascript">
+    
+/*
+Cette page et ces scripts on été écrits par le PNR Normandie-Maine (Sylvain M.)
+grace à l'aide précieuse des communautés d'entraide géomatique,
+notamment le Forum SIG (http://www.forumsig.org) et Georezo (http://georezo.net/),
+mais aussi http://www.developpez.com/ http://gis.stackexchange.com
+Ils reposent sur des outils libres illustrent l'intérêt des outils OpenSource.
+Les données sont hébergées :
+- sur Carmen (http://carmen.naturefrance.fr/) : Bd-Bocage (1945/2000/2010)
+- sur Geonormandie (http://www.geonormandie.fr/accueil) : Bd-Ortho Historique IGN (photographie 1950)
+- sur le Geoportail de l'IGN (http://www.geoportail.gouv.fr) : Bd-Ortho IGN (photographies actuelles)
+- sur GeoBretagne : Fond Carto OSM
+*/    
+
+
+        var center = [48.56317164, -0.15068650];
+        var scan25map1 = L.tileLayer('http://gpp3-wxs.ign.fr/m0r2s506m3l75g95knvuoa5k/geoportail/wmts?LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS&EXCEPTIONS=text/xml&FORMAT=image/jpeg&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {attribution: '(c) IGN'});
+        var scan25map2 = L.tileLayer('http://gpp3-wxs.ign.fr/m0r2s506m3l75g95knvuoa5k/geoportail/wmts?LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS&EXCEPTIONS=text/xml&FORMAT=image/jpeg&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {attribution: '(c) IGN'});
+        
+        var orthohistomap1 = L.tileLayer('http://datacarto.geonormandie.fr/mapcache/wmts?LAYER=bd_ortho_histo_pnrnm&EXCEPTIONS=text/xml&FORMAT=image/png&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE=default&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {attribution: '(c) IGN | (c) GeoNormandie'});
+        var orthohistomap2 = L.tileLayer('http://datacarto.geonormandie.fr/mapcache/wmts?LAYER=bd_ortho_histo_pnrnm&EXCEPTIONS=text/xml&FORMAT=image/png&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE=default&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {attribution: '(c) IGN | (c) GeoNormandie'});
+
+
+        var orthomap1 = L.tileLayer('http://gpp3-wxs.ign.fr/m0r2s506m3l75g95knvuoa5k/geoportail/wmts?LAYER=ORTHOIMAGERY.ORTHOPHOTOS&EXCEPTIONS=text/xml&FORMAT=image/jpeg&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {attribution: '(c) IGN'});
+        var orthomap2 = L.tileLayer('http://gpp3-wxs.ign.fr/m0r2s506m3l75g95knvuoa5k/geoportail/wmts?LAYER=ORTHOIMAGERY.ORTHOPHOTOS&EXCEPTIONS=text/xml&FORMAT=image/jpeg&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {attribution: '(c) IGN'});
+        
+		var bdbocage1945map1 = new L.LayerGroup();
+      L.tileLayer.wms("http://ws.carmencarto.fr/WMS/139/pnrnm_bocage", {
+    	layers: 'Haies_1945',
+    	srs: 'EPSG:3857',
+        format: 'image/png',
+        transparent: true,
+        attribution: "PNRNM"
+        }).addTo(bdbocage1945map1);
+
+		var bdbocage2000map1 = new L.LayerGroup();
+      L.tileLayer.wms("http://ws.carmencarto.fr/WMS/139/pnrnm_bocage", {
+    	layers: 'Haies_2000',
+    	srs: 'EPSG:3857',
+        format: 'image/png',
+        transparent: true,
+        attribution: "PNRNM"
+        }).addTo(bdbocage2000map1);
+
+ 		var bdbocage2010map1 = new L.LayerGroup();
+      L.tileLayer.wms("http://ws.carmencarto.fr/WMS/139/pnrnm_bocage", {
+    	layers: 'Haies_2010',
+    	srs: 'EPSG:3857',
+        format: 'image/png',
+        transparent: true,
+        attribution: "PNRNM"
+        }).addTo(bdbocage2010map1);
+
+
+		var bdbocage1945map2 = new L.LayerGroup();
+      L.tileLayer.wms("http://ws.carmencarto.fr/WMS/139/pnrnm_bocage", {
+    	layers: 'Haies_1945',
+    	srs: 'EPSG:3857',
+        format: 'image/png',
+        transparent: true,
+        attribution: "PNRNM"
+        }).addTo(bdbocage1945map2);
+
+		var bdbocage2000map2 = new L.LayerGroup();
+      L.tileLayer.wms("http://ws.carmencarto.fr/WMS/139/pnrnm_bocage", {
+    	layers: 'Haies_2000',
+    	srs: 'EPSG:3857',
+        format: 'image/png',
+        transparent: true,
+        attribution: "PNRNM"
+        }).addTo(bdbocage2000map2);
+     
+ 		var bdbocage2010map2 = new L.LayerGroup();
+      L.tileLayer.wms("http://ws.carmencarto.fr/WMS/139/pnrnm_bocage", {
+    	layers: 'Haies_2010',
+    	srs: 'EPSG:3857',
+        format: 'image/png',
+        transparent: true,
+        attribution: "PNRNM"
+        }).addTo(bdbocage2010map2);
+
+
+ 		var osmgeobmap1 = new L.LayerGroup();
+      L.tileLayer.wms("http://osm.geobretagne.fr/gwc01/service/wms", {
+    	layers: 'osm:roads',
+    	srs: 'EPSG:2154',
+        format: 'image/png',
+        transparent: true,
+        attribution: "OSM / GeoBretagne"
+        }).addTo(osmgeobmap1);
+
+ 		var osmgeobmap2 = new L.LayerGroup();
+      L.tileLayer.wms("http://osm.geobretagne.fr/gwc01/service/wms", {
+    	layers: 'osm:roads',
+    	srs: 'EPSG:2154',
+        format: 'image/png',
+        transparent: true,
+        attribution: "OSM / GeoBretagne"
+        }).addTo(osmgeobmap2);
+
+        
+        
+        var map1 = L.map('map1', {
+            layers: [orthohistomap1, bdbocage1945map1, osmgeobmap1],
+            center: center,
+            zoom: 16
+        });
+        map1.attributionControl.setPrefix('');
+        
+       
+        
+        var map2 = L.map('map2', {
+            layers: [orthomap2, bdbocage2010map2, osmgeobmap2],
+            center: center,
+            zoom: 16,
+            zoomControl: false
+        }),
+
+// Ajout du Géocodeur
+// source : https://github.com/Cyrille37/leaflet-control-geocoders
+// basé sur le moteur de recherche addok développé pour la Base Adresse Nationale
+
+      //geocoder = new L.Control.Geocoder.addok(),
+			geocoder = new L.Control.Geocoder.addok( {limit: 10 } ),
+			//geocoder = new L.Control.Geocoder.addok( {geocodingQueryParams:{postcode: '37000'}} ),
+			control = L.Control.geocoder( {
+				geocoder: geocoder, position: 'topleft'
+			}).addTo(map2),
+			marker;
+			iconRed  = new L.Icon.Default({
+				iconUrl: 'addok/images/markeraddok.png'
+			});
+        
+        
+		map2.on('click', function(e) {
+			geocoder.reverse(e.latlng, map.options.crs.scale(map.getZoom()), function(results) {
+				var r = results[0];
+				if (r) {
+					if (marker) {
+						marker.
+							setLatLng(r.center).
+							setPopupContent(r.html || r.name).
+							openPopup();
+					} else {
+						marker = L.marker(r.center, {icon: iconRed, draggable: true}).bindPopup(r.name).addTo(map).openPopup();
+						marker.on('dragend', function(e){
+							geocoder.reverse(e.target.getLatLng(), map.options.crs.scale(map.getZoom()), function(results) {
+								var r = results[0];
+								if (r) {
+									e.target.setPopupContent(r.html || r.name).togglePopup();
+								}
+							});
+						});
+					}
+				}
+			})
+		});
+
+
+
+
+
+
+        var baseLayersmap1 = {
+      "Photographies a&eacute;riennes 1950": orthohistomap1,
+			"Photographies a&eacute;riennes actuelles": orthomap1
+		};
+
+        var baseLayersmap2 = {
+      "Photographies a&eacute;riennes 1950": orthohistomap2,
+			"Photographies a&eacute;riennes actuelles": orthomap2
+		};
+
+				var overlaysmap1 = {
+			"Haies 1945": bdbocage1945map1,
+			"Haies 2000": bdbocage2000map1,
+			"Haies 2010": bdbocage2010map1,
+			"Carte OSM": osmgeobmap1
+		};
+
+				var overlaysmap2 = {
+			"Haies 1945": bdbocage1945map2,
+			"Haies 2000": bdbocage2000map2,
+			"Haies 2010": bdbocage2010map2,
+			"Carte OSM": osmgeobmap2
+		};
+
+		L.control.layers(baseLayersmap1, overlaysmap1).addTo(map1);
+		L.control.layers(baseLayersmap2, overlaysmap2).addTo(map2);
+
+
+
+// Ajout du masque
+// credits: https://github.com/turban/Leaflet.Mask
+L.Mask = L.Polygon.extend({
+	options: {
+		stroke: false,
+		color: '#333',
+		fillOpacity: 0.9,
+		clickable: true,
+
+		outerBounds: new L.LatLngBounds([-90, -360], [90, 360])
+	},
+
+	initialize: function (latLngs, options) {
+        
+         var outerBoundsLatLngs = [
+			this.options.outerBounds.getSouthWest(),
+			this.options.outerBounds.getNorthWest(),
+			this.options.outerBounds.getNorthEast(),
+			this.options.outerBounds.getSouthEast()
+		];
+        L.Polygon.prototype.initialize.call(this, [outerBoundsLatLngs, latLngs], options);	
+	},
+
+});
+L.mask = function (latLngs, options) {
+	return new L.Mask(latLngs, options);
+};
+
+
+// transform geojson coordinates into an array of L.LatLng
+var coordinates = masquepnrnm.features[0].geometry.coordinates[0];
+var latLngs = [];
+for (i=0; i<coordinates.length; i++) {
+    latLngs.push(new L.LatLng(coordinates[i][1], coordinates[i][0]));
+}
+
+L.mask(latLngs).addTo(map1);
+L.mask(latLngs).addTo(map2);
+
+
+
+
+// Gestion des curseurs
+
+// avec curseur sur la carte :
+      cursor1 = L.circleMarker([0,0], {radius:20, weight: 8, fillOpacity: 0.1, color: '#FFFF00', fillColor: '#FFFF00'}).addTo(map1);
+      cursor2 = L.circleMarker([0,0], {radius:20, weight: 8, fillOpacity: 0.1, color: '#FFFF00', fillColor: '#FFFF00'}).addTo(map2);
+
+// sans curseur sur la carte :
+      //cursor1 = L.circleMarker([0,0], {radius:20, weight: 8, fillOpacity: 0.1, color: '#FFFF00', fillColor: '#FFFF00', className: 'noCursor'}).addTo(map1);
+      //cursor2 = L.circleMarker([0,0], {radius:20, weight: 8, fillOpacity: 0.1, color: '#FFFF00', fillColor: '#FFFF00', className: 'noCursor'}).addTo(map2);
+
+      map1.on('mousemove', function (e) { 
+          cursor2.setLatLng(e.latlng); 
+          cursor1.setLatLng(e.latlng);
+      });
+
+      map2.on('mousemove', function (e) { 
+          cursor1.setLatLng(e.latlng); 
+          cursor2.setLatLng(e.latlng);
+       });
+
+
+
+        map1.sync(map2);
+        map2.sync(map1);
+        
+
+
+
+    </script>
+</body>
+</html>
