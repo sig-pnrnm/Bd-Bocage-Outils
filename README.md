@@ -4,6 +4,7 @@ Partage d'outils autours de la valorisation des bases de données de haies (Bd B
 ## Interfaces Bocage PNR Normandie-Maine
 
 Les "développements" sont basés sur Leaflet + PostGis
+
 2 interfaces sont mises à dispositions : 1 statistique et 1 diachronique (navigation synchronisée)
 
 
