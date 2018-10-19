@@ -36,7 +36,7 @@ Demo : http://observatoire.parc-naturel-normandie-maine.fr/bocage_diachronique.p
 Les applications sont basées sur les outils ArcGis Online d'ESRI.
 
 Profil du bocage des communes du Parc naturel régional du Perche :
-http://pnrp.maps.arcgis.com/apps/PublicInformation/index.html?appid=681f56f994324bb388231b8384957716
+>> URL à venir
 
 L'évolution du Bocage Percheron de 1947 à 2010 :
-http://pnrp.maps.arcgis.com/apps/StorytellingSwipe/index.html?appid=ae741311d0244ad39e3b1f56a643adc9
+>> URL à venir
