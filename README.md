@@ -43,3 +43,6 @@ http://pnrp.maps.arcgis.com/apps/PublicInformation/index.html?appid=681f56f99432
 
 http://pnrp.maps.arcgis.com/apps/StorytellingSwipe/index.html?appid=ae741311d0244ad39e3b1f56a643adc9
 
+**L'évolution du Bocage Percheron de 1947 à 2010 : comparez les 2 époques**
+
+http://pnrp.maps.arcgis.com/apps/CompareAnalysis/index.html?appid=e0737ac47853497d86199326dde8305a
