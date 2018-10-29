@@ -42,9 +42,12 @@
   </head>
 <body>
 
+<?php $show_help = true // détermine si on affiche l'aide ou pas dans le bandeau observatoire ?>
+
 <?php include('pnrnm/includesobs/bandeau_observatoire.php'); ?>
 <?php include('pnrnm/includesobs/apropos_observatoire.php'); ?>
 <?php include('bocage/info_bocage.php'); ?>
+<?php include('bocage/help_bocage_densite.php'); ?>
 
 
 <div class="container fill">
@@ -64,6 +67,14 @@ $("#about-btn-map").click(function() {
 // Affichage de la fenêtre "Plus d'infos Observatoire"
 $("#about-btn-obs").click(function() {
   $("#aboutModalObs").modal("show");
+  $(".navbar-collapse.in").collapse("hide");
+  return false;
+});
+
+
+// affichage de la fenêtre "Aide" (pas actif si $show_help n'est pas défini)
+$("#about-help").click(function() {
+  $("#aboutModalHelp").modal("show");
   $(".navbar-collapse.in").collapse("hide");
   return false;
 });
@@ -264,6 +275,9 @@ info.update = function (props) {
         //'&chdlp=bv' +  // Chart legend position
         '&chg=12.6,16.6,1,5">'+ // ajout des "grid lines"
         '</div>');
+		
+        // réactivation des Tooltips
+        $('[data-toggle="tooltip"]').tooltip();
 };
 
 // ajout du contrôle "info" à la carte
@@ -679,6 +693,8 @@ function changeDateTo1950() {
 		map.removeControl(legendDN);
     legendDN.addTo(map);
     currentDate = "Carte1950";
+	// réactivation des Tooltips
+	$('[data-toggle="tooltip"]').tooltip();
 };
 function changeDateTo2010() {
 		mailleslayer.setStyle(styleDN2010);
@@ -686,6 +702,8 @@ function changeDateTo2010() {
 		map.removeControl(legendDN);
     legendDN.addTo(map);
     currentDate = "Carte2010";
+	// réactivation des Tooltips
+	$('[data-toggle="tooltip"]').tooltip();
 };
 function changeDateToEvol() {
 		mailleslayer.setStyle(style_evol_DN);
@@ -693,6 +711,8 @@ function changeDateToEvol() {
 		map.removeControl(legendDN);
     legendEvol.addTo(map);
     currentDate = "CarteEvol";
+	// réactivation des Tooltips
+	$('[data-toggle="tooltip"]').tooltip();
 };
 
 
